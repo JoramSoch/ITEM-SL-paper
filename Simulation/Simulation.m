@@ -19,6 +19,7 @@
 % - 29/11/18,22/07/19: univariate simulation
 % - 24/04/2023, 22:35: multivariate simulation
 % - 31/10/2023, 13:04: prepared for upload
+% - 29/11/2023, 09:43: finalized for upload
 
 
 clear
@@ -310,11 +311,6 @@ for g = 1:numel(s2n)
                 Y_test  = Sim(g,h).est(j).BA(:,:,i);
                 svm_tr  = svmtrain(x_train, Y_train, opt);
                 x_pred  = svmpredict(x_test, Y_test, svm_tr, '-q');
-                % b_train = mnrfit(Y_train, x_train);
-                % o_pred  = exp(Y_test*b_train(2:end) + b_train(1));
-                % x_pred  = zeros(size(x_test));
-                % x_pred(o_pred>1) = min(x_train);
-                % x_pred(o_pred<1) = max(x_train);
                 a = sum(x_test==x_pred)/t;
                 Sim(g,h).pred.aA(j,i) = a;
                 
@@ -323,11 +319,6 @@ for g = 1:numel(s2n)
                 Y_test  = Sim(g,h).est(j).BS(:,:,i);
                 svm_tr  = svmtrain(x_train, Y_train, opt);
                 x_pred  = svmpredict(x_test, Y_test, svm_tr, '-q');
-                % b_train = ME_log_reg_IRLS(x_train, [ones(size(Y_train,1),1), Y_train], 0);
-                % b_train = mnrfit(Y_train, x_train);
-                % o_pred  = exp(Y_test*b_train(2:end) + b_train(1));
-                % x_pred(o_pred>1) = min(x_train);
-                % x_pred(o_pred<1) = max(x_train);
                 a = sum(x_test==x_pred)/t;
                 Sim(g,h).pred.aS(j,i) = a;
                 
