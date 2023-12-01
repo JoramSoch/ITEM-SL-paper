@@ -28,9 +28,9 @@ For re-running analyses of the simulation study, you need to perform the followi
 3. Run the script `Figure_SimRes.m` to reproduce Figure 3 from the paper.
 4. Run the script `Figure_ParaMod.m` to reproduce Figure 5 from the paper.
 
-Note: The directory contains random number generators and for the uniform distribution (`MD_unirnd.m`) and the matrix-normal distribution (`MD_matnrnd.m`) which only rely on the built-in MATLAB functions (`rand`, `randn`). Therefore, MATLAB's Statistics and Machine Learning Toolbox is only required for SVM training (`svmtrain`) and testing (`svmpredict`) based on LS-A and LS-S estimates (see "Step 3c" in `Simulation.m`).
+Note: The directory contains random number generators and for the uniform distribution (`MD_unirnd.m`) and the matrix-normal distribution (`MD_matnrnd.m`) which only rely on the built-in MATLAB functions (`rand`, `randn`). Therefore, MATLAB's Statistics and Machine Learning Toolbox is only required for SVM training (`svmtrain`) and testing (`svmpredict`) based on LS-A and LS-S estimates (see [Step 3c](https://github.com/JoramSoch/ITEM-SL-paper/blob/main/Simulation/Simulation.m#L296-L342) in `Simulation.m`).
 
-To investigate a null scenario without condition decodability, set `r = 0` in line 38 of `Simulation.m`. This will set the proportion of voxels with information to zero, such that there are no multivariate differences between the two experimental conditions. In this case, decoding accuracies should be symmetrically distributed around the chance level (see Section 3.2 in the paper).
+To investigate a null scenario without condition decodability, set `r = 0` in [line 38](https://github.com/JoramSoch/ITEM-SL-paper/blob/main/Simulation/Simulation.m#L38) of `Simulation.m`. This will set the proportion of voxels with information to zero, such that there are no multivariate differences between the two experimental conditions. In this case, decoding accuracies should be symmetrically distributed around the chance level (see Section 3.2 in the paper).
 
 
 ### Application
@@ -38,15 +38,15 @@ To investigate a null scenario without condition decodability, set `r = 0` in li
 For re-running analyses of the empirical data, you need to perform the following steps:
 1. Create a folder on your computer that hereafter is referred to as the "study directory". Within the study directory, create sub-folders called "data" and "stats".
 2. Clone the GitHub repository [OpenNeuroDatasets/ds002013](https://github.com/OpenNeuroDatasets/ds002013) into a folder on your computer that hereafter is referred to as the "tools directory".
-3. Enter the study directory from step 1 into line 11 of `project directories.m`.
-4. Enter the tools directory from step 2 into line 14 of `download_dataset.m`.
-5. Now you are ready to run the main analysis script `analyses_ITEM_SL.m`. Note that this script is divided into sub-sections which can be run step-wise by commenting anything else (step 1 should always be uncommented). Ideally, run the code step by step to ensure that each stage of the analysis succeeds.
+3. Enter the study directory from step 1 into [line 11](https://github.com/JoramSoch/ITEM-SL-paper/blob/main/Application/project_directories.m#L11) of `project directories.m`.
+4. Enter the tools directory from step 2 into [line 14](https://github.com/JoramSoch/ITEM-SL-paper/blob/main/Application/download_dataset.m#L14) of `download_dataset.m`.
+5. Now you are ready to run the main analysis script `analyses_ITEM_SL.m`. Note that this script is divided into sub-sections which can be run step-wise by commenting anything else ([Step 1](https://github.com/JoramSoch/ITEM-SL-paper/blob/main/Application/analyses_ITEM_SL.m#L39-L65) should always be uncommented). Ideally, run the code step by step to ensure that each stage of the analysis succeeds.
 
 When data analysis has finished, there should be an SPM results directory in the "stats" sub-folder of the study directory (e.g. called "glms-item_glm-full_ITEM_sects-all_SL-6mm_wcvCC") containing voxel-wise searchlight-based ITEM analysis results. Contrast images 60 to 79 (e.g. "con_0060_L_FWE_0.05_0.nii" or "con_0064_E1_unc_0.001_10.nii") are those which are presented on Figure 4B from the paper.
 
 
 ### Bonus: Graphical Abstract
 
-<img src="https://github.com/JoramSoch/ITEM-paper-SL/raw/main/Figure_GA.png" alt="Graphical Abstract" width=1000>
+<img src="https://raw.githubusercontent.com/JoramSoch/ITEM-SL-paper/main/Figure_GA.png" alt="Graphical Abstract" width=1000>
 
-This graphical abstract illustrates the core idea of the paper: When multiplying the trial-wise design matrix with itself, weighted by the (inverse of the) scan-by-scan covariance matrix, this results in the (inverse of the) trial-by-trial covariance matrix which describes the distribution of the trial-wise parameter estimates. Click [here](https://github.com/JoramSoch/ITEM-paper/blob/main/Figure_GA.pdf) for a PDF version.
+This graphical abstract illustrates the core idea of the paper: When multiplying the trial-wise design matrix with itself, weighted by the (inverse of the) scan-by-scan covariance matrix, this results in the (inverse of the) trial-by-trial covariance matrix which describes the distribution of the trial-wise parameter estimates. Click [here](https://github.com/JoramSoch/ITEM-paper-SL/blob/main/Figure_GA.pdf) for a PDF version.
