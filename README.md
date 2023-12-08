@@ -4,7 +4,7 @@
 
 This code belongs to the paper on "Searchlight-based trial-wise fMRI decoding in the presence of trial-by-trial correlations" by Joram Soch, publicly available from *bioRxiv* and currently under review in *Imaging Neuroscience*. It consists of two sub-folders, "Simulation" (Section 3, Figures 3/5 in the paper) and "Application" (Section 4, Figure 4 in the paper).
 
-- Preprint: TBA
+- Preprint: https://www.biorxiv.org/content/10.1101/2023.12.05.570090
 - Data: https://openneuro.org/datasets/ds002013 (Version 1.0.3)
 - Code: https://github.com/JoramSoch/ITEM-paper
 - Toolbox: https://github.com/JoramSoch/ITEM
