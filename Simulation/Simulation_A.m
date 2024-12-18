@@ -1,4 +1,4 @@
-% ITEM-SL: Simulation
+% ITEM-SL: Simulation A
 % _
 % This script performs a conceptual analogue of the simulation in Mumford
 % et al. (2012), extended to multivariate signals and supplemented with an
@@ -20,6 +20,7 @@
 % - 24/04/2023, 22:35: multivariate simulation
 % - 31/10/2023, 13:04: prepared for upload
 % - 29/11/2023, 09:43: finalized for upload
+% - 18/12/2024, 17:23: renamed to Simulation A
 
 
 clear
@@ -388,7 +389,7 @@ for g = 1:numel(s2n)
     
 end;
 
-save('Simulation.mat', 'Sim', 'Res');
+save('Simulation_A.mat', 'Sim', 'Res');
 
 fprintf('end.');
 
@@ -473,38 +474,31 @@ imagesc(Sim(1,1).des(1).DM.U); axis off; axis square;
 title('U', 'FontSize', 16);
 
 
-% plot test performances
-figure('Name', 'test performances', 'Color', [1 1 1], 'Position', [50 50 1000 1000]);
-
-for g = 1:numel(s2n)
-    for h = 1:size(ISI,1)
-        subplot(numel(s2n), size(ISI,1), (g-1)*size(ISI,1)+h);
-        hold on;
-        bar(1, Res(g,h).TPR(1), 'r');
-        bar(2, Res(g,h).TPR(2), 'b');
-        bar(3, Res(g,h).TPR(3), 'g');
-        if r > 0
-            axis([(1-0.5), (3+0.5), 0.5, 1.01]);
-        else
-            axis([(1-0.5), (3+0.5), -0.01, 0.5]);
-        end;
-        set(gca,'Box','On');
-        set(gca,'XTick',[1:3],'XTickLabel',{'LS-A' 'LS-S' 'ITEM'});
-        if g == numel(s2n)
-            xlabel(['t_{isi} \sim', sprintf(' U(%d,%d)', ISI(h,1), ISI(h,2))], 'FontSize', 16);
-        end;
-        if h == 1
-            ylabel(['\sigma^2 =', sprintf(' %1.1f', s2n(g))], 'FontSize', 16);
-        end;
-      % if g == 1 & h == floor(mean([1 size(ISI,1)]))
-      %     if r > 0
-      %         title('True Positive Rates', 'FontSize', 20);
-      %     else
-      %         title('False Positive Rates', 'FontSize', 20);
-      %     end;
-      % end;
-    end;
-end;
+% % plot test performances
+% figure('Name', 'test performances', 'Color', [1 1 1], 'Position', [50 50 1000 1000]);
+% 
+% for g = 1:numel(s2n)
+%     for h = 1:size(ISI,1)
+%         subplot(numel(s2n), size(ISI,1), (g-1)*size(ISI,1)+h);
+%         hold on;
+%         bar(1, Res(g,h).TPR(1), 'r');
+%         bar(2, Res(g,h).TPR(2), 'b');
+%         bar(3, Res(g,h).TPR(3), 'g');
+%         if r > 0
+%             axis([(1-0.5), (3+0.5), 0.5, 1.01]);
+%         else
+%             axis([(1-0.5), (3+0.5), -0.01, 0.5]);
+%         end;
+%         set(gca,'Box','On');
+%         set(gca,'XTick',[1:3],'XTickLabel',{'LS-A' 'LS-S' 'ITEM'});
+%         if g == numel(s2n)
+%             xlabel(['t_{isi} \sim', sprintf(' U(%d,%d)', ISI(h,1), ISI(h,2))], 'FontSize', 16);
+%         end;
+%         if h == 1
+%             ylabel(['\sigma^2 =', sprintf(' %1.1f', s2n(g))], 'FontSize', 16);
+%         end;
+%     end;
+% end;
 
 
 % plot decoding accuracies
@@ -527,8 +521,5 @@ for g = 1:numel(s2n)
         if h == 1
             ylabel(['\sigma^2 =', sprintf(' %1.1f', s2n(g))], 'FontSize', 16);
         end;
-      % if g == 1 & h == floor(mean([1 size(ISI,1)]))
-      %     title('Decoding Accuracies', 'FontSize', 20);
-      % end;
     end;
 end;

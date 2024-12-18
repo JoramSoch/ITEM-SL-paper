@@ -4,7 +4,7 @@ clear
 close all
 
 % load decoding accuracies
-load Simulation.mat
+load Simulation_A.mat
 r   =  1/5;                     % proportion of voxels with information
 s2n = [0.8, 1.6, 3.2];          % between-scan variance
 ISI = [0,4; 2,6; 4,8];          % inter-stimulus-intervals
