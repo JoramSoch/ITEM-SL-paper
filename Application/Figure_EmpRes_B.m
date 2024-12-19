@@ -1,4 +1,4 @@
-% ITEM-SL Paper, Figure 4B
+% ITEM-SL Paper, Figure 5B
 
 clear
 close all

@@ -17,6 +17,8 @@
 % - 31/10/2023, 14:41: prepared for upload
 % - 15/11/2023, 15:53: prepared for upload
 % - 21/11/2023, 16:02: finalized for upload
+% - 18/12/2024, 19:01: added LS-A, LS-S, GLMsingle
+% - 19/12/2024, 09:08: added group analyses
 
 
 clear
@@ -42,7 +44,10 @@ load project_directories.mat
 sub2do = [1:4]; % AAA03, AAA02, AAX01, AAX02
 
 % specify SL radii
-SL_rads = [6]; % [3,6,9]; % in millimeters
+SL_rad = 6;     % in millimeters
+
+% specify methods
+methods ={'ITEM', 'LS-A', 'LS-S', 'GLM-single'};
 
 % select subjects
 if numel(sub2do) == 1, subj_file = 'subjects_1st.mat'; end;
@@ -87,12 +92,21 @@ fprintf('\n\n-> Estimate trial-wise GLMs:\n');
 % for all subjects
 for i = 1:num_subj
     % load SPM.mat
-    fprintf('   - Subject %s (%d out of %d) ... ', subj_ids{i}, i, num_subj);
+    fprintf('   - Subject %s (%d out of %d):\n', subj_ids{i}, i, num_subj);
     SPM_mat = strcat(bids_dir,'/','sub-',subj_ids{i},'/mods/','glms-',MS_name,'/','glm-',GLM_names{1},'/','SPM.mat');
     load(SPM_mat);
-    % estimate model
-    ITEM_est_1st_lvl(SPM, 'DCT', [2 3]);
-    fprintf('successful!\n');
+    % for all methods
+    for j = 1:numel(methods)
+        if strcmp(methods{j},'ITEM')                    % ITEM
+            ITEM_est_1st_lvl(SPM, 'DCT', [2 3]);
+        elseif strcmp(methods{j},'LS-A')                % LS-A
+            ITEM_est_1st_lvl_LS_A(SPM, 'DCT', [2 3]);   
+        elseif strcmp(methods{j},'LS-S')                % LS-S
+            ITEM_est_1st_lvl_LS_S(SPM, 'DCT', [2 3]);   
+        elseif strcmp(methods{j},'GLM-single')          % GLMsingle
+            GLMsingle_est_1st_lvl(SPM, [2 3]);          
+        end;
+    end;
 end;
 
 
@@ -103,19 +117,26 @@ fprintf('\n-> Perform searchlight-based ITEM:\n');
     
 % for all subjects
 for i = 1:num_subj
-    % diplay message
+    % load SPM.mat
     fprintf('   - Subject %s (%d out of %d):\n', subj_ids{i}, i, num_subj);
-    % for all radii
-    for j = 1:numel(SL_rads)
-        % load SPM.mat
-        fprintf('     - searchlight radius r = %d mm:\n', SL_rads(j));
-        SPM_mat = strcat(bids_dir,'/','sub-',subj_ids{i},'/mods/','glms-',MS_name,'/','glm-',GLM_names{1},'/','SPM.mat');
-        load(SPM_mat);
-        % perform analysis
-        fprintf('       - ITEM analysis ... ');
-        c = [0, ones(1,num_sect)];
-        ITEM_dec_recon_SL(SPM, SL_rads(j), c, 'sects-all')
-        fprintf('done.\n');
+    SPM_mat = strcat(bids_dir,'/','sub-',subj_ids{i},'/mods/','glms-',MS_name,'/','glm-',GLM_names{1},'/','SPM.mat');
+    load(SPM_mat);
+    % for all methods
+    for j = 1:numel(methods)
+        fprintf('     - %s, searchlight radius r = %d mm:\n', methods{j}, SL_rad);
+        % specify analysis
+        rad  = SL_rad;
+        c    = [0, ones(1,num_sect)];
+        con  = 'sects-all';
+        meth = methods{j};
+        % perform decoding
+        if strcmp(methods{j},'ITEM')                    % ITEM
+            ITEM_dec_recon_SL(SPM, rad, c, con);
+        elseif strncmp(methods{j},'LS',2)               % LS-A or LS-S
+            ITEM_dec_recon_SL_SVR(SPM, rad, c, con, meth);
+        elseif strcmp(methods{j},'GLM-single')          % GLMsingle
+            GLMsingle_dec_recon_SL_SVR(SPM, rad, c, con, meth)
+        end;
     end;
 end;
 
@@ -129,17 +150,17 @@ fprintf('\n-> Delete unnecessary files:\n');
 for i = 1:num_subj
     % diplay message
     fprintf('   - Subject %s (%d out of %d):\n', subj_ids{i}, i, num_subj);
-    % for all radii
-    for j = 1:numel(SL_rads)
+    % for all methods
+    for j = 1:1 % ITEM only
         % specify radius/contrast
-        fprintf('     - searchlight radius r = %d mm:\n', SL_rads(j));
-        rad = SL_rads(j);
+        fprintf('     - %s, searchlight radius r = %d mm:\n', methods{j}, SL_rad);
+        rad = SL_rad;
         con = 'sects-all';
         % delete images
         fprintf('       - delete images ... ');
-        GLM_dir = strcat(bids_dir,'/','sub-',subj_ids{i},'/mods/','glms-',MS_name,'/','glm-',GLM_names{1});
-        ana_dir = strcat(GLM_dir,'/ITEM_dec_recon/','ITEM_',con,'_SL-',num2str(rad),'mm');
-        files   = [dir(strcat(ana_dir,'/avgCC_*.nii')); dir(strcat(ana_dir,'/oosCC_*.nii'))];
+        GLM_dir = strcat(bids_dir,'/','sub-',subj_ids{i},'/mods/','glms-',MS_name,'/','glm-',GLM_names{1},'/');
+        ana_dir = strcat(GLM_dir,'ITEM_dec_recon/','ITEM_',con,'_SL-',num2str(rad),'mm/');
+        files   = [dir(strcat(ana_dir,'avgCC_*.nii')); dir(strcat(ana_dir,'oosCC_*.nii'))];
         for k = 1:numel(files)
             delete(strcat(files(k).folder,'/',files(k).name));
         end;
@@ -166,11 +187,11 @@ fprintf('\n-> Normalize ITEM-SL maps:\n');
 for i = 1:num_subj
     % diplay message
     fprintf('   - Subject %s (%d out of %d):\n', subj_ids{i}, i, num_subj);
-    % for all radii
-    for j = 1:numel(SL_rads)
+    % for all methods
+    for j = 1:numel(methods)
         % diplay message
-        fprintf('     - searchlight radius r = %d mm:\n', SL_rads(j));
-        normalize_subj_rad_img(subj_ids{i}, SL_rads(j), 'cvCC', [3 3 3]);
+        fprintf('     - %s, searchlight radius r = %d mm:\n', methods{j}, SL_rad);
+        normalize_subj_rad_img(subj_ids{i}, methods{j}, SL_rad, 'sects-all', 'cvCC', [3 3 3]);
     end;
 end;
 
@@ -180,29 +201,39 @@ end;
 % display message
 fprintf('\n->Perform group-level analysis:\n');  
 
-% run group-level analysis
-SL_rad   = 6;                   % searchlight radius: 6 mm
-ana_name = 'sects-all';         % analysis name: "all sectors"
-img_name = 'cvCC';              % cvCC = cross-validated correlation coefficient
-create_full_factorial(SL_rad, ana_name, strcat('w',img_name));
-
-% save thresholded SPMs
-SPM_mat = strcat(stat_dir,'glms-',MS_name,'_','glm-',GLM_names{1},'_ITEM_',ana_name,'_SL-',num2str(rad),'mm','_w',img_name,'/','SPM.mat');
-load(SPM_mat);
-con = 53+[1:26];
-for i = 1:numel(con)
+% for all methods
+for j = 1:numel(methods)
+    
     % diplay message
-    con_name = SPM.xCon(con(i)).name;
-    fprintf('   - Contrast "%s" (%d out of %d):\n', con_name, i, numel(con));
-    % threshold SPM
-    if contains(con_name,'<>')
-        con_name = strcat(con_name(1:strfind(con_name,'<>')-1),'_neq_',con_name(strfind(con_name,'<>')+2:end));
+    meth_str = methods{j};
+    fprintf('   - Analysis "%s" (%d out of %d):\n', meth_str, j, numel(methods));
+    
+    % run group-level analyses
+    SL_rad   = 6;                   % searchlight radius: 6 mm
+    ana_name = 'sects-all';         % analysis name: "all sectors"
+    img_name = 'cvCC';              % cvCC = cross-validated correlation coefficient
+    create_full_factorial(meth_str, SL_rad, ana_name, strcat('w',img_name));
+    
+    % save thresholded SPMs
+    SPM_mat = strcat(stat_dir,'glms-',MS_name,'_','glm-',GLM_names{1},'_',...
+                     meth_str,'_',ana_name,'_SL-',num2str(rad),'mm','_w',img_name,'/','SPM.mat');
+    load(SPM_mat);
+    con = 53+[1:26];
+    for i = 1:numel(con)
+        % diplay message
+        con_name = SPM.xCon(con(i)).name;
+        fprintf('     - Contrast "%s" (%d out of %d):\n', con_name, i, numel(con));
+        % threshold SPM
+        if contains(con_name,'<>')
+            con_name = strcat(con_name(1:strfind(con_name,'<>')-1),'_neq_',con_name(strfind(con_name,'<>')+2:end));
+        end;
+        if contains(con_name,'>')
+            con_name = strcat(con_name(1:strfind(con_name,'>')-1),'_gr_',con_name(strfind(con_name,'>')+1:end));
+        end;
+        filename = strcat('con_',MF_int2str0(con(i),4),'_',con_name,'_FWE_0.05_0.nii');
+        spm_save_thr_SPM(SPM, con(i), true, 0.05, 0, filename);
+        filename = strcat('con_',MF_int2str0(con(i),4),'_',con_name,'_unc_0.001_10.nii');
+        spm_save_thr_SPM(SPM, con(i), false, 0.001, 10, filename);
     end;
-    if contains(con_name,'>')
-        con_name = strcat(con_name(1:strfind(con_name,'>')-1),'_gr_',con_name(strfind(con_name,'>')+1:end));
-    end;
-    filename = strcat('con_',MF_int2str0(con(i),4),'_',con_name,'_FWE_0.05_0.nii');
-    spm_save_thr_SPM(SPM, con(i), true, 0.05, 0, filename);
-    filename = strcat('con_',MF_int2str0(con(i),4),'_',con_name,'_unc_0.001_10.nii');
-    spm_save_thr_SPM(SPM, con(i), false, 0.001, 10, filename);
+    
 end;

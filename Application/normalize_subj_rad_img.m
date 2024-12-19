@@ -1,31 +1,45 @@
-function normalize_subj_rad_img(subj_id, SL_rad, img_name, vox_size)
+function normalize_subj_rad_img(subj_id, meth_str, SL_rad, ana_name, img_name, vox_size)
 % _
 % Create and perform normalization for given analysis
-%     subj_id  - subject ID, e.g. 'AAA-03'
-%     SL_rad   - searchlight radius, in mm
-%     img_name - image filename ('avgCC', 'cvCC')
+%     subj_id  - subject ID (e.g. 'AAA-03')
+%     meth_str - method string (i.e. 'ITEM', 'LS-A', 'LS-S' or 'GLM-single')
+%     SL_rad   - searchlight radius (in mm)
+%     ana_name - analysis name (e.g. 'sects-all')
+%     img_name - image filename (e.g. 'cvCC')
 %     vox_size - normalized voxel size (1 x 3 vector)
 % 
 % written by Joram Soch <joram.soch@bccn-berlin.de>, 07/12/2021, 17:08;
-% finalized: 15/11/2023, 16:19
+% finalized: 15/11/2023, 16:19; updated: 19/12/2024, 09:07
 
 
 % specify sectors
 sect_inds = [1:48];
 num_sect  = numel(sect_inds);
-ana_name  = 'sects-all';
+MS_name   = 'item';
+GLM_names ={'full'};
+meth_str(strfind(meth_str,'-')) = '_';
 
 % load directories and files
 load project_directories.mat
-load model_spaces/glms-item.mat
-anat_img  = strcat(bids_dir,'sub-',subj_id,'/anat/','rof_sub-',subj_id,'_T1w.nii');
+GLM_dir   = strcat(bids_dir,'sub-',subj_id,'/mods/','glms-',MS_name,'/','glm-',GLM_names{1},'/');
+anat_img  = strcat(bids_dir,'sub-',subj_id,'/anat/','y_rof_sub-',subj_id,'_T1w.nii');
 func_imgs = cell(num_sect,1);
 for j = 1:num_sect
     img_num = sect_inds(j)+1;
     img_str = MF_int2str0(img_num,4);
-    func_imgs{j} = strcat(bids_dir,'sub-',subj_id,'/mods/','glms-',MS_name,'/','glm-',GLM_names{1},'/',...
-                                   'ITEM_dec_recon/ITEM_',ana_name,'_SL-',num2str(SL_rad),'mm/',...
-                                   img_name,'_',img_str,'.nii');
+    if strcmp(meth_str,'ITEM')
+        func_imgs{j} = strcat(GLM_dir,'ITEM_dec_recon/ITEM_',...
+                              ana_name,'_SL-',num2str(SL_rad),'mm/',...
+                              img_name,'_',img_str,'.nii');
+    elseif strncmp(meth_str,'LS',2)
+        func_imgs{j} = strcat(GLM_dir,'ITEM_dec_recon_',meth_str,'/ITEM_',...
+                              ana_name,'_SL-',num2str(SL_rad),'mm/',...
+                              img_name,'_',img_str,'.nii');
+    elseif strcmp(meth_str,'GLM_single')
+        func_imgs{j} = strcat(GLM_dir,meth_str,'_SVR','/SVR_',...
+                              ana_name,'_SL-',num2str(SL_rad),'mm/',...
+                              img_name,'_',img_str,'.nii');
+    end;
 end;
 
 % configure segmentation

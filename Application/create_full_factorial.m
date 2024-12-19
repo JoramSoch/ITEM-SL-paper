@@ -1,13 +1,14 @@
-function create_full_factorial(SL_rad, ana_name, img_name)
+function create_full_factorial(meth_str, SL_rad, ana_name, img_name)
 % _
 % Create full factorial batch for given searchlight radius
-%     SL_rad   - searchlight radius, in mm
-%     ana_name - name of the SL-based ITEM analysis
-%     img_name - image filename ('avgCC', 'cvCC')
+%     meth_str - method string (i.e. 'ITEM', 'LS-A', 'LS-S' or 'GLM-single')
+%     SL_rad   - searchlight radius (in mm)
+%     ana_name - analysis name (e.g. 'sects-all')
+%     img_name - image filename (e.g. 'cvCC')
 % 
 % written by Joram Soch <joram.soch@bccn-berlin.de>, 07/12/2021, 11:21;
 % adapted: 09/12/2021, 13:18; edited: 24/03/2023, 12:18;
-% finalized: 21/11/2023, 15:41
+% finalized: 21/11/2023, 15:41; updated: 19/12/2024, 08:55
 
 
 % create sector matrix
@@ -18,9 +19,10 @@ sects = [ 1:12;
 [n,m] = size(sects);
      
 % specify basic information
+meth_str(strfind(meth_str,'-')) = '_';
 subj_file = 'subjects_all.mat';
 MS_file   = 'model_spaces/glms-item.mat';
-stat_suff = strcat('ITEM_sects-all_SL-',num2str(SL_rad),'mm_',img_name);
+stat_suff = strcat(meth_str,'_',ana_name,'_SL-',num2str(SL_rad),'mm_',img_name);
 
 % specify sector maps
 img_paths = cell(size(sects));
@@ -28,9 +30,19 @@ for i = 1:n
     for j = 1:m
         img_num = sects(i,j)+1;
         img_str = MF_int2str0(img_num,4);
-        img_paths{i,j} = strcat('sub-*/mods/','glms-+/','glm-#/',...
-                                'ITEM_dec_recon/ITEM_',ana_name,'_SL-',num2str(SL_rad),'mm/',...
-                                img_name,'_',img_str,'.nii');
+        if strcmp(meth_str,'ITEM')
+            img_paths{i,j} = strcat('sub-*/mods/','glms-+/','glm-#/','ITEM_dec_recon/ITEM_',...
+                                    ana_name,'_SL-',num2str(SL_rad),'mm/',...
+                                    img_name,'_',img_str,'.nii');
+        elseif strncmp(meth_str,'LS',2)
+            img_paths{i,j} = strcat('sub-*/mods/','glms-+/','glm-#/','ITEM_dec_recon_',meth_str,'/ITEM_',...
+                                    ana_name,'_SL-',num2str(SL_rad),'mm/',...
+                                    img_name,'_',img_str,'.nii');
+        elseif strcmp(meth_str,'GLM_single')
+            img_paths{i,j} = strcat('sub-*/mods/','glms-+/','glm-#/',meth_str,'_SVR','/SVR_',...
+                                    ana_name,'_SL-',num2str(SL_rad),'mm/',...
+                                    img_name,'_',img_str,'.nii');
+        end;
     end;
 end;
 
