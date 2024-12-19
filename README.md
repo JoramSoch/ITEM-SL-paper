@@ -45,13 +45,13 @@ For re-running analyses of the empirical data, you need to perform the following
 4. Enter the tools directory from step 2 into [line 14](https://github.com/JoramSoch/ITEM-SL-paper/blob/main/Application/download_dataset.m#L14) of `download_dataset.m`.
 5. Now you are ready to run the main analysis script `analyses_ITEM_SL.m`. Note that this script is divided into sub-sections which can be run step-wise by commenting anything else ([Step 1](https://github.com/JoramSoch/ITEM-SL-paper/blob/main/Application/analyses_ITEM_SL.m#L41-L70) should always be uncommented). Ideally, run the code step by step to ensure that each stage of the analysis succeeds.
 
-When data analysis has finished, the following SPM results directories should be in the "stats" sub-folder of the study directory:
+When data analysis has finished, the following directories should be in the "stats" sub-folder of the study directory:
 - `glms-item_glm-full_ITEM_sects-all_SL-6mm_wcvCC/`
 - `glms-item_glm-full_LS_A_sects-all_SL-6mm_wcvCC/`
 - `glms-item_glm-full_LS_S_sects-all_SL-6mm_wcvCC/`
 - `glms-item_glm-full_GLM_single_sects-all_SL-6mm_wcvCC/`
 
-These directories represent group-level analyses of voxel-wise cross-validated correlation coefficients (`cvCC`) from searchlight-based decoding of all sectors in the visual field (`sects-all`) using a searchlight radius of 6 mm (`SL-6mm`) based on ITEM, LS-A, LS-S and GLMsingle (`ITEM`, `LS_A`, `LS_S`, `GLM_single`). In each directory, contrast images 60 to 79 (e.g. `con_0060_L_FWE_0.05_0.nii` or `con_0064_E1_unc_0.001_10.nii`) are those which are presented in the paper (see Figures 5B and 6).
+These directories represent group-level SPM analyses of voxel-wise cross-validated correlation coefficients (`cvCC`) from searchlight-based decoding of all sectors in the visual field (`sects-all`) using a searchlight radius of 6 mm (`SL-6mm`) based on either ITEM, LS-A, LS-S or GLMsingle (`ITEM`, `LS_A`, `LS_S`, `GLM_single`). In each directory, contrast images 60 to 79 (e.g. `con_0060_L_FWE_0.05_0.nii` or `con_0064_E1_unc_0.001_10.nii`) are those which are presented in the paper (see Figures 5B and 6).
 
 
 ### Bonus: Graphical Abstract
