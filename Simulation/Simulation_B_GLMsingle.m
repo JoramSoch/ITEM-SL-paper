@@ -1,16 +1,12 @@
-% ITEM-SL: Simulation B
+% ITEM-SL: Simulation
 % _
 % This script performs a conceptual analogue of the simulation in Mumford
 % et al. (2012), extended to multivariate signals and supplemented with an
 % inverse transformed encoding model (ITEM) approach.
 % 
 % In the entire script, we use the following suffixes:
-% - "*A": trial-wise design matrix X_S a.k.a.
-%         Mumford's "least squares, all" (LS-A)
-% - "*S": trial-based design matrix X_T a.k.a.
-%         Mumford's "least squares, separate" (LS-S)
-% - "*T": (inverse) transformed encoding model a.k.a.
-%         Soch's "least squares, transformed" (LS-T)
+% - "*G": fractional ridge regression a.k.a.
+%         Prince & Kay's "GLM single" (GLMs)
 % 
 % Author: Joram Soch, BCCN Berlin
 % E-Mail: joram.soch@bccn-berlin.de
@@ -18,9 +14,14 @@
 % Version History:
 % - 29/11/18,22/07/19: univariate simulation
 % - 24/04/2023, 22:35: multivariate simulation
-% - 12/11/2024, 10:04: rewritten to Simulation B
-% - 18/12/2024, 17:34: finalized for upload
-% - 27/03/2023, 16:46: added time measurement
+% - 31/10/2023, 13:04: prepared for upload
+% - 29/11/2023, 09:43: finalized for upload
+% - 12/11/2024, 10:04: additional simulation
+% - 28/11/2024, 01:59: added GLMsingle
+% - 07/03/2025, 08:09: modified GLMsingle
+% - 07/03/2025, 08:38: removed LS-A, LS-S, ITEM
+% - 07/03/2025, 10:46: standardized features
+% - 08/04/2025, 16:20: finalized for upload
 
 
 clear
@@ -49,17 +50,13 @@ rho = 0.12;                     % temporal auto-correlation
 ny  = 0.48;                     % spatial auto-correlation
 
 % specify settings
-ReML  = true;                   % execution of restricted maximum likelihood
 C     = 1;                      % cost parameter for support vector classification
 chlvl = 0.5;                    % chance level for classification task
 alpha = 0.05;                   % significance level for binomial test
 
 % preallocate results
-Sim    = struct([]);            % simulations structure
-Res    = struct([]);            % sim results structure
-TPR_bA = zeros(1,numel(r),numel(v),numel(t));
-TPR_bS = zeros(1,numel(r),numel(v),numel(t));
-TPR_bT = zeros(1,numel(r),numel(v),numel(t));
+Sim   = struct([]);             % simulations structure
+Res   = struct([]);             % sim results structure
 
 fprintf('end.');
 
@@ -232,84 +229,66 @@ for g = 1:numel(v)
     % for each sample size
     for h = 1:numel(t)
         
-        if ReML
-            fprintf('t = %d: \n ', t(h));
-        else
-            fprintf('t = %d, ', t(h));
-        end;
+        fprintf('t = %d: \n ', t(h));
         
         %%% Step 3a: estimate model parameters %%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         % for each voxel proportion
         for i = 1:numel(r)
             
-            % for each session
+            % configure timing for GLMsingle
+            n   = Sim(g,h).base.n;
+            p   = max(Sim(g,h).des(1).tt);
+            dur = mean(Sim(g,h).des(1).dur);
+            %TR = TR;
+            
+            % configure data for GLMsingle
+            data  = cell(1,S);
             for j = 1:S
-        
-                % for each simulation
+                Y = zeros(n,v(g)*N);
                 for s = 1:N
-                
-                    % get data and whitening matrix
-                    Y = Sim(g,h).data(j,i).Y(:,:,s);
-                    W = Sim(g,h).base.W;
-
-                    % estimate using trial-wise design matrix
-                    WY = W*Y;
-                    WX = W*Sim(g,h).des(j).DM.X_t;
-                    bA = (WX'*WX)^(-1) * WX'*WY;
-                    Sim(g,h).est(j,i).BA(:,:,s) = bA;
-
-                    % estimate using trial-based design matrices
-                    bS = zeros(t(h),v(g));
-                    for k = 1:t(h)
-                        WX = W*Sim(g,h).des(j).DM.X_s{k};
-                        bk = (WX'*WX)^(-1) * WX'*WY;
-                        bS(k,:) = bk(1,:);
-                    end;
-                    Sim(g,h).est(j,i).BS(:,:,s) = bS;
-                    
+                    js= [(s-1)*v(g)+[1:v(g)]];
+                    Y(:,js) = Sim(g,h).data(j,i).Y(:,:,s);
                 end;
-                
+                data{j} = Y';
             end;
             
-        end;
-        
-        %%% Step 3b: restricted maximum likelihood %%%%%%%%%%%%%%%%%%%%%%%%
-        
-        % for each voxel proportion
-        for i = 1:numel(r)
-            
-            % for each session
+            % configure design for GLMsingle
+            design= cell(1,S);
             for j = 1:S
-
-                % if ReML specified
-                if ReML
-
-                    % prepare ReML analysis
-                    BA = reshape(Sim(g,h).est(j,i).BA,[t(h) v(g)*N]);
-                    YY = (1/(v(g)*N)) * (BA*BA');
-                    X  = Sim(g,h).des(j).DM.T;
-                    Q{1} = eye(t(h));
-                    Q{2} = Sim(g,h).des(j).DM.U;
-
-                    % perform ReML analysis
-                    [V, s2] = spm_reml(YY, X, Q);
-                    Sim(g,h).est(j,i).Sg = V;
-                    Sim(g,h).est(j,i).s2 = full(s2)';
-                    % Sim(g,h).des(j).DM.Sg = V;
-                    % Sim(g,h).des(j).DM.s2 = full(s2)';
-
-                else
-
-                    % no ReML analysis
-                    Sim(g,h).est(j,i).Sg = Sim(g,h).des(j).DM.U;
-                    Sim(g,h).est(j,i).s2 = 1;
-                    % Sim(g,h).des(j).DM.Sg = Sim(g,h).des(j).DM.U;
-                    % Sim(g,h).des(j).DM.s2 = 1;
-
+                X = zeros(n,p);
+                tt= Sim(g,h).des(j).tt;
+                for k = 1:numel(tt)
+                    ik= round(Sim(g,h).des(j).ons(k)/TR)+1;
+                    X(ik,tt(k)) = 1;
                 end;
-                
+                design{j} = X;
             end;
+            
+            % perform GLMsingle estimation
+            orig_dir = pwd;
+            GLMs_dir = {NaN, NaN};
+            options.wantlibrary       = 0;
+            options.wantglmdenoise    = 0;
+            options.wantfracridge     = 1;
+            options.wantfileoutputs   = [false, false, false, false];
+            options.wantmemoryoutputs = [false, false, false, true];
+            [results, design] = GLMestimatesingletrial(design, data, dur, TR, GLMs_dir, options);
+            cd(orig_dir);
+            
+            % extract GLMsingle estimates
+            bG = double(squeeze(results{4}.modelmd)');
+            for j = 1:S
+                for s = 1:N
+                    ij= [(j-1)*t(h)+[1:t(h)]];
+                    js= [(s-1)*v(g)+[1:v(g)]];
+                    BG= bG(ij,js);                                  % standardize:
+                    BG= BG - repmat(mean(BG),[size(BG,1) 1]);       %- subtract mean
+                    BG= BG./ repmat(std(BG), [size(BG,1) 1]);       %- divide by std
+                    Sim(g,h).est(j,i).BG(:,:,s) = BG;
+                end;
+            end;
+            clear BG
             
         end;
         
@@ -321,46 +300,23 @@ for g = 1:numel(v)
             % for each session
             for j = 1:S
                 
-                % get design matrices
+                % get train/test labels
                 x_train = Sim(g,h).des([1:S]~=j).tt;
                 x_test  = Sim(g,h).des(j).tt;
-                X_train = Sim(g,h).des([1:S]~=j).DM.T;
-                X_test  = Sim(g,h).des(j).DM.T;
                 
                 % for each simulation
                 for s = 1:N
                     
                     % specify SVM options
                     opt = sprintf('-s 0 -t 0 -c %s -q', num2str(C));
-
-                    % SVC using trial-wise parameter estimates
-                    Y_train = Sim(g,h).est([1:S]~=j,i).BA(:,:,s);
-                    Y_test  = Sim(g,h).est(j,i).BA(:,:,s);
+                    
+                    % SVC using GLMsingle parameter estimates
+                    Y_train = Sim(g,h).est([1:S]~=j,i).BG(:,:,s);
+                    Y_test  = Sim(g,h).est(j,i).BG(:,:,s);
                     svm_tr  = svmtrain(x_train, Y_train, opt);
                     x_pred  = svmpredict(x_test, Y_test, svm_tr, '-q');
                     a = sum(x_test==x_pred)/t(h);
-                    Sim(g,h).pred.aA(s,i,j) = a;
-
-                    % SVC using trial-based parameter values
-                    Y_train = Sim(g,h).est([1:S]~=j,i).BS(:,:,s);
-                    Y_test  = Sim(g,h).est(j,i).BS(:,:,s);
-                    svm_tr  = svmtrain(x_train, Y_train, opt);
-                    x_pred  = svmpredict(x_test, Y_test, svm_tr, '-q');
-                    a = sum(x_test==x_pred)/t(h);
-                    Sim(g,h).pred.aS(s,i,j) = a;
-
-                    % classification using SL-based ITEM
-                    Y_train = [Sim(g,h).est([1:S]~=j,i).BA(:,:,s), ones(t(h),1)];
-                    Y_test  = [Sim(g,h).est(j,i).BA(:,:,s), ones(t(h),1)];
-                    V_train = Sim(g,h).est([1:S]~=j,i).Sg;
-                    V_test  = Sim(g,h).est(j,i).Sg;
-                    P_train = inv(V_train);
-                    W_test  = sqrtm(inv(V_test));
-                    b_train = (Y_train'*P_train*Y_train)^(-1) * Y_train'*P_train*X_train;
-                    X_rec   = W_test * Y_test * b_train;
-                    X_pred  = [(X_rec(:,1)>X_rec(:,2)), (X_rec(:,2)>X_rec(:,1))];
-                    a = sum(X_test(:,1)==X_pred(:,1))/t(h);
-                    Sim(g,h).pred.aT(s,i,j) = a;
+                    Sim(g,h).pred.aG(s,i,j) = a;
                     
                 end;
 
@@ -382,7 +338,7 @@ total_time = toc;
 
 fprintf('\n\n-> Step 4: ');
 Y_11  = Sim(1,1).data(1,1).Y(:,:,1);
-BA_11 = Sim(1,1).est(1,1).BA(:,:,1);
+BG_11 = Sim(1,1).est(1,1).BG(:,:,1);
 
 % for each SL size
 for g = 1:numel(v)
@@ -395,34 +351,29 @@ for g = 1:numel(v)
         fprintf('t = %d, ', t(h));
         
         % true positive rates
-        nT = S*t(h);
         for i = 1:numel(r)
-            cA = round(sum(Sim(g,h).pred.aA(:,i,:)*t(h),3));
-            cS = round(sum(Sim(g,h).pred.aS(:,i,:)*t(h),3));
-            cT = round(sum(Sim(g,h).pred.aT(:,i,:)*t(h),3));
-            [phat, pciA] = binofit(cA, nT, alpha);
-            [phat, pciS] = binofit(cS, nT, alpha);
-            [phat, pciT] = binofit(cT, nT, alpha);
-            Res(g,h).TPR(1,i) = mean(pciA(:,1)>chlvl);
-            Res(g,h).TPR(2,i) = mean(pciS(:,1)>chlvl);
-            Res(g,h).TPR(3,i) = mean(pciT(:,1)>chlvl);
+            nT = S*t(h);
+            cG = round(sum(Sim(g,h).pred.aG(:,i,:)*t(h),3));
+            [phat, pciG]      = binofit(cG, nT, alpha);
+            Res(g,h).TPR(:,i) = [zeros(1,3), mean(pciG(:,1)>chlvl)];
         end;
-        clear nT cA cS cT phat pci*
+        clear nT cA cS cT cG phat pci*
         
         % decoding accuracies
-        Res(g,h).DA(:,:,1) = mean(Sim(g,h).pred.aA,3);
-        Res(g,h).DA(:,:,2) = mean(Sim(g,h).pred.aS,3);
-        Res(g,h).DA(:,:,3) = mean(Sim(g,h).pred.aT,3);
+        Res(g,h).DA(:,:,1) = zeros(N,numel(r));
+        Res(g,h).DA(:,:,2) = zeros(N,numel(r));
+        Res(g,h).DA(:,:,3) = zeros(N,numel(r));
+        Res(g,h).DA(:,:,4) = mean(Sim(g,h).pred.aG,3);
         
         % remove fields
         Sim(g,h).data = rmfield(Sim(g,h).data,{'B','Y'});
-        Sim(g,h).est  = rmfield(Sim(g,h).est,{'BA','BS'});
+        Sim(g,h).est  = rmfield(Sim(g,h).est,{'BG'});
         
     end;
     
 end;
 
-save('Simulation_B.mat', 'Sim', 'Res', 'total_time');
+save('Simulation_B_GLMsingle.mat', 'Sim', 'Res', 'total_time');
 
 fprintf('end.');
 
@@ -495,7 +446,7 @@ axis off
 text(1/2, 1/2, '"second-level" model', 'FontSize', 16, 'HorizontalAlignment', 'Center', 'VerticalAlignment', 'Middle');
 
 subplot(3,4,10);
-imagesc(BA_11); axis off;
+imagesc(BG_11); axis off;
 title('\gamma', 'FontSize', 16);
 
 subplot(3,4,11);
@@ -516,11 +467,12 @@ for g = 1:numel(v)
         hold on;
         plot(r, Res(g,h).TPR(1,:), '-r');
         plot(r, Res(g,h).TPR(2,:), '-b');
+        plot(r, Res(g,h).TPR(4,:), '-m');
         plot(r, Res(g,h).TPR(3,:), '-g');
         axis([(0-0.01), (1+0.01), (0.5-0.01), (1+0.01)]);
         set(gca,'Box','On');
         if g == numel(v) && h == numel(t)
-            legend({'LS-A' 'LS-S' 'ITEM'}, 'Location', 'SouthEast');
+            legend({'LS-A', 'LS-S', 'ITEM', 'GLMsingle'}, 'Location', 'SouthEast');
         end;
         if g == numel(v) && h == 2
             xlabel('proportion of voxels with signal carrying information about experimental conditions', 'FontSize', 14);
@@ -549,16 +501,19 @@ for g = 1:numel(v)
         plot(r, mean(Res(g,h).DA(:,:,1)), '-r', 'LineWidth', 2);
         plot(r, mean(Res(g,h).DA(:,:,2)), '-b', 'LineWidth', 2);
         plot(r, mean(Res(g,h).DA(:,:,3)), '-g', 'LineWidth', 2);
+        plot(r, mean(Res(g,h).DA(:,:,4)), '-m', 'LineWidth', 2);
         plot(r, mean(Res(g,h).DA(:,:,1))+std(Res(g,h).DA(:,:,1)), '--r');
         plot(r, mean(Res(g,h).DA(:,:,1))-std(Res(g,h).DA(:,:,1)), '--r');
         plot(r, mean(Res(g,h).DA(:,:,2))+std(Res(g,h).DA(:,:,2)), '--b');
         plot(r, mean(Res(g,h).DA(:,:,2))-std(Res(g,h).DA(:,:,2)), '--b');
         plot(r, mean(Res(g,h).DA(:,:,3))+std(Res(g,h).DA(:,:,3)), '--g');
         plot(r, mean(Res(g,h).DA(:,:,3))-std(Res(g,h).DA(:,:,3)), '--g');
+        plot(r, mean(Res(g,h).DA(:,:,4))+std(Res(g,h).DA(:,:,4)), '--m');
+        plot(r, mean(Res(g,h).DA(:,:,4))-std(Res(g,h).DA(:,:,4)), '--m');
         axis([(0-0.01), (1+0.01), (0.5-0.01), (1+0.01)]);
         set(gca,'Box','On');
         if g == numel(v) && h == numel(t)
-            legend({'LS-A' 'LS-S' 'ITEM'}, 'Location', 'SouthEast');
+            legend({'LS-A', 'LS-S', 'GLMsingle', 'ITEM'}, 'Location', 'SouthEast');
         end;
         if g == numel(v) && h == 2
             xlabel('proportion of voxels with signal carrying information about experimental conditions', 'FontSize', 14);
