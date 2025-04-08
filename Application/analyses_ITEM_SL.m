@@ -1,7 +1,7 @@
 % Searchlight-based ITEM analysis: pipeline script
 % _
 % This script performs the whole data analysis underlying the results
-% reported in Soch (2023), submitted to Imaging Neuroscience.
+% reported in Soch (2025), revised for Imaging Neuroscience.
 % 
 % Author: Joram Soch, BCCN Berlin
 % E-Mail: joram.soch@bccn-berlin.de

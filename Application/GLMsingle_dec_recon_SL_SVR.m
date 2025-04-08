@@ -16,8 +16,8 @@ function GLMsingle_dec_recon_SL_SVR(SPM, rad, c, con, meth)
 % Author: Joram Soch, BCCN Berlin
 % E-Mail: joram.soch@bccn-berlin.de
 % 
-% First edit: 25/09/2024, 16:08 (Vn/a)
-%  Last edit: 25/09/2024, 16:08 (Vn/a)
+% First edit: 25/09/2024, 16:08 (V0.4)
+%  Last edit: 25/09/2024, 16:08 (V0.4)
 
 
 %=========================================================================%
