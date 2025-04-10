@@ -26,14 +26,14 @@ This code was developed and run using the following software:
 
 For re-running analyses of the simulation study, you need to perform the following steps:
 1. Clone this repository into some folder on your computer.
-2. Run the scripts `Simulation_A.m` and `Simulation_B.m` located in the sub-folder "Simulation". This performs the simulations as reported in Section 3 and Appendix A of the paper and should create results files called `Simulation_A.mat` and `Simulation_B.mat`. They also generate a number of figures which are only for diagnosis and can be closed.
+2. Run the scripts `Simulation_A|B.m` and `Simulation_A|B_GLMsingle.m` located in the sub-folder "Simulation". This performs the simulations as reported in Section 3 and Appendix A of the paper and should create results files called `Simulation_A|B.mat` and `Simulation_A|B_GLMsingle.mat`. They also generate a number of figures which are only for diagnosis and can be closed.
 3. Run the script `Figure_SimRes.m` to reproduce Figure 3 from the paper.
 4. Run the script `Figure_SimResTrl.m` to reproduce Figure 4 from the paper.
 5. Run the script `Figure_ParaMod.m` to reproduce Figure 7 from the paper.
 
-Note: The directory contains random number generators for the uniform distribution (`MD_unirnd.m`) and the matrix-normal distribution (`MD_matnrnd.m`) which only rely on the built-in MATLAB functions (`rand`, `randn`). Therefore, MATLAB's Statistics and Machine Learning Toolbox is only required for SVM training (`svmtrain`) and testing (`svmpredict`) based on LS-A and LS-S estimates (cf. Step 3c in [Simulation A](https://github.com/JoramSoch/ITEM-SL-paper/blob/main/Simulation/Simulation_A.m#L297-L343) and [Simulation B](https://github.com/JoramSoch/ITEM-SL-paper/blob/main/Simulation/Simulation_B.m#L314-L367)).
+Note: The directory contains random number generators for the uniform distribution (`MD_unirnd.m`) and the matrix-normal distribution (`MD_matnrnd.m`) which only rely on the built-in MATLAB functions (`rand`, `randn`). Therefore, MATLAB's Statistics and Machine Learning Toolbox is only required for SVM training (`svmtrain`) and testing (`svmpredict`) based on LS-A and LS-S estimates (cf. Step 3c in [Simulation A](https://github.com/JoramSoch/ITEM-SL-paper/blob/main/Simulation/Simulation_A.m#L299-L345) and [Simulation B](https://github.com/JoramSoch/ITEM-SL-paper/blob/main/Simulation/Simulation_B.m#L316-L369)).
 
-To investigate a null scenario without condition decodability, set `r = 0` in [line 39](https://github.com/JoramSoch/ITEM-SL-paper/blob/main/Simulation/Simulation_A.m#L39) of `Simulation_A.m`. This will set the proportion of voxels with information to zero, such that there are no multivariate differences between the two experimental conditions. In this case, decoding accuracies should be symmetrically distributed around the chance level (see Section 3.2 and cf. Figure 4).
+To investigate a null scenario without condition decodability, set `r = 0` in [line 39](https://github.com/JoramSoch/ITEM-SL-paper/blob/main/Simulation/Simulation_A.m#L40) of `Simulation_A.m`. This will set the proportion of voxels with information to zero, such that there are no multivariate differences between the two experimental conditions. In this case, decoding accuracies should be symmetrically distributed around the chance level (see Section 3.2 and cf. Figure 4).
 
 
 ### Application
